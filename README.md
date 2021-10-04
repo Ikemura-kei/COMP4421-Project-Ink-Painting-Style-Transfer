@@ -2,9 +2,9 @@
 
 ## 1. Group Member
       
-| Name          | Student ID  | ITSC      | Github ID |
-| :------------ | :---------- | :-------- | :-------- |
-| HUANG, Yiming | 20677598    | yhuangdl  | lastbasket |
+| Name          | Student ID  | ITSC      | Github ID           |
+| :------------ | :---------- | :-------- | :------------------ |
+| HUANG, Yiming | 20677598    | yhuangdl  | lastbasket          |
 | IKEMURA, Kei  | 20627452    | kikemura  | Ikemura-kei (OWNER) |
-| WU, Honglin   | 20646408    | hwubh     | hwubh |
-| YAU, Homan   | 20514215    | hmyauac     | AgTears |
+| WU, Honglin   | 20646408    | hwubh     | hwubh               |
+| YAU, Homan    | 20514215    | hmyauac   | AgTears             |
