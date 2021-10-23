@@ -19,13 +19,11 @@ __**Link**__: https://www.ijcai.org/proceedings/2021/0114.pdf
 &nbsp;   
 __**Github link**__:https://github.com/symoon94/Neural-Style-Transfer-pytorch
 
-&nbsp;  
 __**Paper link**__:https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Gatys_Image_Style_Transfer_CVPR_2016_paper.pdf
 
 &nbsp;
 ## 5. Contrastive Learning for Unpaired Image-to-Image Translation
 
-&nbsp;   
 __**Paper link**__:https://arxiv.org/pdf/2007.15651.pdf
 
 &nbsp;  
@@ -37,5 +35,4 @@ __**Github link**__:https://github.com/taesungp/contrastive-unpaired-translation
 &nbsp;
 __**Paper link**__:http://alumni.media.mit.edu/~shiboxin/files/He_MM18.pdf
 
-&nbsp;
 __**Github link**__:https://github.com/PKU-IMRE/ChipGAN
