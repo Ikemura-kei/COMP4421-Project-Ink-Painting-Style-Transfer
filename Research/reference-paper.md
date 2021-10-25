@@ -36,3 +36,11 @@ __**Github link**__:https://github.com/taesungp/contrastive-unpaired-translation
 __**Paper link**__:http://alumni.media.mit.edu/~shiboxin/files/He_MM18.pdf
 
 __**Github link**__:https://github.com/PKU-IMRE/ChipGAN
+
+&nbsp;
+## 7. Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data
+
+&nbsp;
+__**Paper link**__:https://arxiv.org/pdf/2107.10833.pdf
+
+__**Github link**__:https://github.com/xinntao/Real-ESRGAN
