@@ -56,6 +56,7 @@ import numpy as np
 import PIL
 from matplotlib import pyplot as plt
 import utils
+import kornia
 import torchvision.transforms as transforms
 
 
@@ -109,16 +110,60 @@ class EL(nn.Module):
         
         
         # print(target.shape)
-        self.target = tensor_to_image(target)
+        # self.target = tensor_to_image(target)
         # print(self.target.shape)
-        self.target = torch.Tensor(cv.Canny(image=self.target,threshold1= 85, threshold2 =255))
-    
+        # self.target = torch.Tensor(cv.Canny(image=self.target,threshold1= 85, threshold2 =255))
+        self.threshold = nn.Threshold(205, 1e-6)
+
+        filter_x = torch.tensor(np.array([[[[-0.5, 0, 0.5], [-1, 0, 1], [-0.5, 0, 0.5]]]]))
+        filter_y = torch.tensor(np.array([[[[-0.5, -1, -0.5], [0, 0, 0], [0.5, 1, 0.5]]]]))
+
+        self.sobel_filter_x = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(3, 3), padding=1, bias=False);
+        self.sobel_filter_x.weight = nn.Parameter(filter_x.float(), requires_grad=False)
+        self.sobel_filter_x.to(input_img.device)
+
+        self.sobel_filter_y = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(3, 3), padding=1, bias=False);
+        self.sobel_filter_y.weight = nn.Parameter(filter_y.float(), requires_grad=False)
+        self.sobel_filter_y.to(input_img.device)
+
+        image = target.clone().detach().squeeze(dim=0)[0].unsqueeze(0).unsqueeze(0)
+        self.target_r = self.sobel_filter_x(image) + self.sobel_filter_y(image)
+        image = target.clone().detach().squeeze(dim=0)[1].unsqueeze(0).unsqueeze(0)
+        self.target_g = self.sobel_filter_x(image) + self.sobel_filter_y(image)
+        image = target.clone().detach().squeeze(dim=0)[2].unsqueeze(0).unsqueeze(0)
+        self.target_b = self.sobel_filter_x(image) + self.sobel_filter_y(image)
+
+        negated_r = torch.ones(image.shape).to(image.device) * 255 - (self.target_r.squeeze(0) + 50)
+        negated_g = torch.ones(image.shape).to(image.device) * 255 - (self.target_g.squeeze(0) + 50)
+        negated_b = torch.ones(image.shape).to(image.device) * 255 - (self.target_b.squeeze(0) + 50)
+
+        self.target_r = self.threshold(negated_r)    
+        self.target_g = self.threshold(negated_g)   
+        self.target_b = self.threshold(negated_b)   
+
     def forward(self, input):
-        img = (self.input_img.clone().detach().cpu().numpy().squeeze(0).transpose((1,2,0))*255).astype(np.uint8)
-        edge_map = cv.Canny(image=img,threshold1= 85,threshold2= 255)
-        edge_map = torch.Tensor(edge_map)
-        self.loss = F.mse_loss(edge_map, self.target)
-        # self.loss = 0
+        # img = (self.input_img.clone().detach().cpu().numpy().squeeze(0).transpose((1,2,0))*255).astype(np.uint8)
+        # edge_map = cv.Canny(image=img,threshold1= 85,threshold2= 255)
+        
+        image = input.squeeze(dim=0)[0].unsqueeze(0).unsqueeze(0)
+        edge_r = self.sobel_filter_x(image) + self.sobel_filter_y(image)
+        image = input.squeeze(dim=0)[1].unsqueeze(0).unsqueeze(0)
+        edge_g = self.sobel_filter_x(image) + self.sobel_filter_y(image)
+        image = input.squeeze(dim=0)[2].unsqueeze(0).unsqueeze(0)
+        edge_b = self.sobel_filter_x(image) + self.sobel_filter_y(image)
+
+        negated_r = torch.ones(image.shape).to(image.device) * 255 - (edge_r.squeeze(0) + 50)
+        negated_g = torch.ones(image.shape).to(image.device) * 255 - (edge_g.squeeze(0) + 50)
+        negated_b = torch.ones(image.shape).to(image.device) * 255 - (edge_b.squeeze(0) + 50)
+        
+        edge_r = self.threshold(negated_r)    
+        edge_g = self.threshold(negated_g)   
+        edge_b = self.threshold(negated_b) 
+
+        print("edge require grad: ", edge_r.requires_grad)
+
+        self.loss = F.mse_loss(edge_r, self.target_r) + F.mse_loss(edge_g, self.target_g) + F.mse_loss(edge_b, self.target_b)
+
         return input
 
 
@@ -139,6 +184,10 @@ def nst_model(content_img, style_img, input_img = None, device = 'cuda:0'):
     i = 0
     for name, layer in vgg._modules.items():
         if name in ['0','2','5','10']:
+            if name =='0':
+                edge_loss = EL(content_img, input_img)
+                edge_losses.append(edge_loss)
+                model.add_module('edgeloss_{}'.format(i),edge_loss)
             model.add_module('conv_{}'.format(i),layer)
             style_target = model(style_img)
             style_loss = SL(style_target)
@@ -169,9 +218,7 @@ def nst_model(content_img, style_img, input_img = None, device = 'cuda:0'):
             i += 1
 
         elif name == '11':
-            edge_loss = EL(content_img, input_img)
-            edge_losses.append(edge_loss)
-            model.add_module('edgeloss_{}'.format(i),edge_loss)
             break
 
+            
     return model, style_losses, content_losses, edge_losses

@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 import model
 import utils
+import kornia
 
 import argparse
 
@@ -26,14 +27,26 @@ def main(args):
     c_weight = args.c_weight
     s_weight = args.s_weight
 
-    edge_weight = 5e-2
+    edge_weight = 10
 
     content_img, style_img = loader(content_img, style_img, size = size)
     content_img = content_img.to(device)
     style_img = style_img.to(device)
     input_img = content_img.clone().to(device) # just noise array is fine
+    # input_img = input_img.requires_grad_()
 
+    # test = input_img.clone().requires_grad_()
+    # print("before test requires gradient:", test.requires_grad)
+    # zero = torch.zeros(test.shape, requires_grad=True).to(device)
+    # one = torch.ones(test.shape, requires_grad=True).to(device)
+    # test = torch.where(test > 1, one, zero)
+    # print("after test requires gradient:", test.requires_grad)
 
+    # print("before:",input_img.requires_grad)
+    # mag, edge = kornia.filters.canny(input_img, hysteresis=False)
+    # print("after", edge.requires_grad)
+    # imshow(edge, title="canny")
+    
     model, style_losses, content_losses, edge_losses  = nst(content_img, style_img, input_img)
 
     optimizer = optim.LBFGS([input_img.requires_grad_()])
@@ -60,7 +73,7 @@ def main(args):
 
             
 
-            loss = cl + sl + el
+            loss = cl + sl +el
             loss.backward()
 
             if step[0] % 50 == 0:
@@ -86,14 +99,14 @@ if __name__ == "__main__":
     parser.add_argument('--content_img', type=str, default = 'images/395_A.png')
     parser.add_argument('--style_img', type=str, default = 'images/395_B.png')
     parser.add_argument('--size', type=int, default = 512, help='if you want to get more clear pictures, increase the size')
-    parser.add_argument('--steps', type=int, default = 300 * 2)
+    parser.add_argument('--steps', type=int, default = 300 )
     parser.add_argument('--c_weight', type=int, default = 1, help='weighting factor for content reconstruction')
     parser.add_argument('--s_weight', type=int, default = 100000, help='weighting factor for style reconstruction')
 
     args = parser.parse_args()
     print(args)
     output = main(args)
-
+    
     plt.figure()
     imshow(output, title = 'Output Image')
     plt.pause(5)

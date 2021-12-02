@@ -39,7 +39,11 @@ def imshow(image, title = None):
     target_img_PIL = pil(image)
     # print(target_img_PIL.size)
     plt.figure()
-    plt.imshow(target_img_PIL)
+    if image.shape[0] == 3:
+        plt.imshow(target_img_PIL)
+    else:
+        plt.imshow(target_img_PIL, cmap="gray")
+        
     if title is not None:
         plt.title(title)
     plt.pause(1)
