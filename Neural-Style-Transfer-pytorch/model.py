@@ -58,6 +58,7 @@ from matplotlib import pyplot as plt
 import utils
 import kornia
 import torchvision.transforms as transforms
+import net_canny
 
 
 gram_matrix = utils.gram_matrix
@@ -166,6 +167,26 @@ class EL(nn.Module):
 
         return input
 
+# edge loss
+class CEL(nn.Module):
+    def __init__(self, target, input_img):
+        super(CEL, self).__init__()
+        self.input_img = input_img
+        self.cnt = 0
+
+        self.target_edge = kornia.filters.sobel(target.clone().detach().to(input_img.device))
+        utils.imshow(self.target_edge)
+
+    def forward(self, input):
+        self.cnt = self.cnt + 1
+
+        edge = kornia.filters.sobel(input)
+        if (self.cnt + 1) % 150 == 0:
+            utils.imshow(edge)
+
+        self.loss = F.mse_loss(edge, self.target_edge)
+
+        return input
 
 ## Generating the 'Neural Style Transfer' Model
 def nst_model(content_img, style_img, input_img = None, device = 'cuda:0'):
@@ -185,7 +206,7 @@ def nst_model(content_img, style_img, input_img = None, device = 'cuda:0'):
     for name, layer in vgg._modules.items():
         if name in ['0','2','5','10']:
             if name =='0':
-                edge_loss = EL(content_img, input_img)
+                edge_loss = CEL(content_img, input_img)
                 edge_losses.append(edge_loss)
                 model.add_module('edgeloss_{}'.format(i),edge_loss)
             model.add_module('conv_{}'.format(i),layer)

@@ -13,6 +13,7 @@ import utils
 import kornia
 
 import argparse
+import net_canny
 
 nst = model.nst_model
 loader = utils.loader
@@ -33,20 +34,7 @@ def main(args):
     content_img = content_img.to(device)
     style_img = style_img.to(device)
     input_img = content_img.clone().to(device) # just noise array is fine
-    # input_img = input_img.requires_grad_()
 
-    # test = input_img.clone().requires_grad_()
-    # print("before test requires gradient:", test.requires_grad)
-    # zero = torch.zeros(test.shape, requires_grad=True).to(device)
-    # one = torch.ones(test.shape, requires_grad=True).to(device)
-    # test = torch.where(test > 1, one, zero)
-    # print("after test requires gradient:", test.requires_grad)
-
-    # print("before:",input_img.requires_grad)
-    # mag, edge = kornia.filters.canny(input_img, hysteresis=False)
-    # print("after", edge.requires_grad)
-    # imshow(edge, title="canny")
-    
     model, style_losses, content_losses, edge_losses  = nst(content_img, style_img, input_img)
 
     optimizer = optim.LBFGS([input_img.requires_grad_()])
@@ -71,9 +59,7 @@ def main(args):
             for e_loss in edge_losses:
                 el += e_loss.loss * edge_weight
 
-            
-
-            loss = cl + sl +el
+            loss = sl + cl + el
             loss.backward()
 
             if step[0] % 50 == 0:
@@ -96,7 +82,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--content_img', type=str, default = 'images/395_A.png')
+    parser.add_argument('--content_img', type=str, default = 'images/009_A.png')
     parser.add_argument('--style_img', type=str, default = 'images/395_B.png')
     parser.add_argument('--size', type=int, default = 512, help='if you want to get more clear pictures, increase the size')
     parser.add_argument('--steps', type=int, default = 300 )
