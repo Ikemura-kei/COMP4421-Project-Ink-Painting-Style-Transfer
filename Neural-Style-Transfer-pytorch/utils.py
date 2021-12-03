@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 ## import target images(content image and style image)
 def loader(content_img, style_img, size):
     content_img = Image.open(content_img)
-    # print("content!", content_img)
+    print("content!", content_img)
     style_img = Image.open(style_img)
     content_img = convert_mode(content_img)
     style_img = convert_mode(style_img)
@@ -74,6 +74,8 @@ def convert_mode(img):
         background.save(img.filename, quality=100)
         converted_img = Image.open(img.filename)
         return converted_img
+    elif img.mode == "L":
+        return img.convert('RGB')
 
 ## check if images are successfully loaded
 # loader("images/arizona.jpg", "images/snow.jpg", 128)
